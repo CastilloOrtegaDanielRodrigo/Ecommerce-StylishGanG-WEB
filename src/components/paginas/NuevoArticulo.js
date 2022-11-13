@@ -1,13 +1,21 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from 'yup'
 import { FirebaseContext } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
+import FileUploader from 'react-firebase-file-uploader';
 
 const NuevoArticulo  = () => {
+//STATE PARA LAS IMAGENES
+    const [subiendo, guardarSubiendo] = useState(false);
+    const [progreso, guardarProgreso] = useState(0);
+    const [urlimagen, guardarUrlimagen] = useState('');
+
+
 //Context con las operaciones de firebase
 const { firebase } = useContext(FirebaseContext)
-    // console.log(firebase); para visualizar si se hizo correctamente en la consola del navegador
+//console.log(firebase);
+// console.log(firebase); para visualizar si se hizo correctamente en la consola del navegador
 
 //Hook para redireccionar
 const navigate = useNavigate();
@@ -38,14 +46,44 @@ const formik = useFormik ({
     onSubmit: articulos => {
         try {
             articulos.existencia = true;
+            articulos.imagen = urlimagen;
+
             firebase.db.collection('productos').add(articulos);
+
             // en caso de que agregue correctamente vamos a redireccionar
             navigate('/Tienda')
         } catch (error) {
             console.log(error);
         }
     }
-})
+});
+//TODO SOBRE LAS IMAGENES
+        const handleUploadStart = () => {
+            guardarProgreso(0);
+            guardarSubiendo(true);
+        }
+        const handleUploadError = error => {
+            guardarSubiendo(false);
+            console.log(error);
+        }
+        const handleUploadSuccess = async nombre => {
+            guardarProgreso(100);
+            guardarSubiendo(false);
+
+            //Almacenar URL de destio
+            const url = await firebase
+                        .storage
+                        .ref("productos")
+                        .child(nombre)
+                        .getDownloadURL();
+        
+        console.log(url);
+        guardarUrlimagen(url);
+        }
+        const handleProgress = progreso => {
+            guardarProgreso(progreso);
+            console.log(progreso);
+        }
 
     return(
         <>
@@ -81,7 +119,7 @@ const formik = useFormik ({
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                                 id="precio"
                                 type="number"
-                                placeholder="$2500"
+                                placeholder="$0.00"
                                 min="0"
                                 value={formik.values.precio}
                                 onChange={formik.handleChange}
@@ -107,14 +145,14 @@ const formik = useFormik ({
                                 onBlur={formik.handleBlur}
                             >
                                 <option value="">--Seleccione--</option>
-                                <option value="teclados">--Teclados--</option>
-                                <option value="monitores">--Monitores--</option>
-                                <option value="mouse">--Mouse--</option>
-                                <option value="targetaG">--Targeta Grafica--</option>
-                                <option value="ram">--Memoria RAM--</option>
-                                <option value="disco">--Discos Duros--</option>
-                                <option value="audifonos">--Audifonos--</option>
-                                <option value="videoj">--VideoJuegos--</option>
+                                <option value="teclados">Teclados</option>
+                                <option value="monitores">Monitores</option>
+                                <option value="mouse">Mouse</option>
+                                <option value="targetaG">Targeta Grafica</option>
+                                <option value="ram">Memoria RAM</option>
+                                <option value="disco">Discos Duros</option>
+                                <option value="audifonos">Audifonos</option>
+                                <option value="portatil">Portatil</option>
                             </select>
                     </div>
                     { formik.touched.categoria && formik.errors.categoria ? (
@@ -127,13 +165,19 @@ const formik = useFormik ({
 
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="imagen">Imagen</label>
-                            <input 
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                id="imagen"
-                                type="file"
-                                value={formik.values.imagen}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
+                            <FileUploader
+                            accept="image/*"
+                            id="imagen"
+                            name="imagen"
+                            randomizeFilename
+                            //Esto es como una carpeta donde se guardaran las imagenes
+                            storageRef={firebase.storage.ref("productos")}
+                            onUploadStart={handleUploadStart}
+                            onUploadError={handleUploadError}
+                            onUploadSuccess={handleUploadSuccess}
+                            onProgress={handleProgress}
+
+                            
                             />
                     </div>
                     <div className="mb-4">
