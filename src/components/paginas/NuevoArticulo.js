@@ -70,6 +70,10 @@ const formik = useFormik ({
             guardarProgreso(100);
             guardarSubiendo(false);
 
+            setTimeout(() => {
+                guardarSubiendo(false);
+            }, 1000)
+
             //Almacenar URL de destio
             const url = await firebase
                         .storage
@@ -148,7 +152,7 @@ const formik = useFormik ({
                                 <option value="teclados">Teclados</option>
                                 <option value="monitores">Monitores</option>
                                 <option value="mouse">Mouse</option>
-                                <option value="targetaG">Targeta Grafica</option>
+                                <option value="targeta Grafica">Targeta Grafica</option>
                                 <option value="ram">Memoria RAM</option>
                                 <option value="disco">Discos Duros</option>
                                 <option value="audifonos">Audifonos</option>
@@ -166,20 +170,33 @@ const formik = useFormik ({
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="imagen">Imagen</label>
                             <FileUploader
-                            accept="image/*"
-                            id="imagen"
-                            name="imagen"
-                            randomizeFilename
-                            //Esto es como una carpeta donde se guardaran las imagenes
-                            storageRef={firebase.storage.ref("productos")}
-                            onUploadStart={handleUploadStart}
-                            onUploadError={handleUploadError}
-                            onUploadSuccess={handleUploadSuccess}
-                            onProgress={handleProgress}
-
-                            
+                                accept="image/*"
+                                id="imagen"
+                                name="imagen"
+                                randomizeFilename
+                                //Esto es como una carpeta donde se guardaran las imagenes
+                                storageRef={firebase.storage.ref("productos")}
+                                onUploadStart={handleUploadStart}
+                                onUploadError={handleUploadError}
+                                onUploadSuccess={handleUploadSuccess}
+                                onProgress={handleProgress}
                             />
                     </div>
+                    
+                        { subiendo && (
+                            <div>
+                                <div className="bg-green-500 absolute left-0 top-0 text-black px-2 text-sm h-12 flex items-center" style={{ width: `${progreso}%`}}>
+                                   {progreso} % 
+                                </div>
+                            </div>
+                        )}
+
+                        {urlimagen && (
+                            <p className=" text-black p-3 text-center my-5">
+                                La imagen se subio correctamente...
+                            </p>
+                        )}
+
                     <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="descripcion">Descripción del Articulo</label>
                             <textarea 
